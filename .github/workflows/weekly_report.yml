@@ -1,0 +1,41 @@
+name: Weekly Report
+
+on:
+  schedule:
+    # Runs every Monday at 9 AM UTC (adjust for your timezone)
+    - cron: '0 9 * * 1'
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Generate weekly report
+      run: |
+        python scripts/weekly_report.py
+    
+    - name: Commit report
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add reports/
+        git diff --quiet && git diff --staged --quiet || git commit -m "Generate weekly report for $(date +%Y-%m-%d)"
+    
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
